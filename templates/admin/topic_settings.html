@@ -1,0 +1,60 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}赛题管理 · 管理后台{% endblock %}
+{% block content %}
+<h2 class="admin-page-title">📝 赛题与数据管理</h2>
+
+<div class="card">
+    <h3 class="card-title">赛题内容</h3>
+    <p class="card-desc">保存后学生端「赛题与数据」页面立即同步；“竞赛题目”将作为页面一级标题显示。</p>
+    <form method="post" class="form">
+        <input type="hidden" name="action" value="save_text">
+        <label class="field">
+            <span class="field-label">竞赛题目（一级标题）<em>*</em></span>
+            <input type="text" name="topic_title" value="{{ t.topic_title }}" required>
+        </label>
+        <label class="field">
+            <span class="field-label">赛题说明</span>
+            <textarea name="topic_desc" rows="5">{{ t.topic_desc }}</textarea>
+        </label>
+        <label class="field">
+            <span class="field-label">竞赛数据</span>
+            <textarea name="topic_data" rows="4">{{ t.topic_data }}</textarea>
+        </label>
+        <label class="field">
+            <span class="field-label">提交说明</span>
+            <textarea name="topic_submit" rows="6">{{ t.topic_submit }}</textarea>
+        </label>
+        <label class="field">
+            <span class="field-label">评价指标（文字说明）</span>
+            <textarea name="topic_metric" rows="3">{{ t.topic_metric }}</textarea>
+            <span class="field-tip">此处仅为学生端展示的补充文字；实际评分与排名口径由「<a href="{{ url_for('admin_metrics') }}">评价指标</a>」页面启用的指标设定决定。</span>
+        </label>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存赛题内容</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3 class="card-title">赛题数据文件配置</h3>
+    <p class="card-desc">请先将数据文件放入项目 <code>data</code> 目录，然后在此输入对应的文件名（不含路径）。训练数据、测试数据、提交样例支持 <b>CSV 或 Excel（.xlsx / .xls）</b>；“实际数据”为评分标准答案，<b>仅支持 CSV</b>（第 1 列为样本id，真实值列由「<a href="{{ url_for('admin_metrics') }}">评价指标</a>」设定指定），保存前会校验文件格式。留空的栏目保持不变。</p>
+    <form method="post" class="form">
+        <input type="hidden" name="action" value="save_files">
+        <div class="upload-grid">
+            {% for k, f in files.items() %}
+            <div class="upload-item">
+                <div class="upload-item-head">{{ f.label }}<code>{{ f.canon }}</code></div>
+                <div class="upload-status {{ 'ok' if f.custom else '' }}">{{ f.display }}</div>
+                <input type="text" name="file_{{ k }}" value="{{ f.filename }}"
+                       placeholder="{% if k == 'answer' %}data 目录下的 CSV 文件名（仅支持 .csv）{% else %}data 目录下的 CSV 或 Excel 文件名{% endif %}"
+                       class="file-input">
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存文件配置</button>
+            <span class="muted">留空的栏目保持不变</span>
+        </div>
+    </form>
+</div>
+{% endblock %}

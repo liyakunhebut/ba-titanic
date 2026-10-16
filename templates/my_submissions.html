@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}我的提交 · 在线评分系统{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 class="card-title">我的全部提交</h2>
+    <p class="card-desc">{{ user.name }}（{{ user.student_no }}）｜共 {{ rows|length }} 次提交，排名取历史最佳成绩（{{ metric.name }}，{{ metric.better_text }}）</p>
+
+    {% if rows %}
+    <table class="table">
+        <thead>
+            <tr><th>序号</th><th>结果文件</th><th>代码文件</th>
+                <th>{{ metric.name }}</th><th>是否最佳</th><th>提交时间</th></tr>
+        </thead>
+        <tbody>
+        {% for r in rows %}
+            <tr {% if r.score == best_score %}class="best-row"{% endif %}>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if r.result_path %}
+                        <a href="{{ url_for('download_file', sid=r.id, ftype='result') }}">⬇ {{ r.result_filename }}</a>
+                    {% else %}{{ r.result_filename or '-' }}{% endif %}
+                </td>
+                <td>
+                    {% if r.code_path %}
+                        <a href="{{ url_for('download_file', sid=r.id, ftype='code') }}">⬇ {{ r.code_filename }}</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td class="mono">{{ r.score | fmt_score }}</td>
+                <td>{% if r.score == best_score %}<span class="badge badge-best">最佳</span>{% endif %}</td>
+                <td>{{ r.created_at }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-text">暂无提交记录。<a href="{{ url_for('upload_page') }}">去提交 →</a></p>
+    {% endif %}
+</div>
+{% endblock %}

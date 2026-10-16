@@ -1,0 +1,60 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}后台首页 · 管理后台{% endblock %}
+{% block content %}
+<h2 class="admin-page-title">后台概览</h2>
+
+<div class="stat-row admin-stat-row">
+    <div class="stat-box">
+        <span class="stat-label">学生总数</span>
+        <span class="stat-num">{{ stats.students }}</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">已提交人数</span>
+        <span class="stat-num">{{ stats.submitted }}</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">提交总次数</span>
+        <span class="stat-num">{{ stats.submissions }}</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">代码文件数</span>
+        <span class="stat-num">{{ stats.codes }}</span>
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="card-title">最新提交</h2>
+    {% if latest %}
+    <table class="table">
+        <thead>
+            <tr><th>#</th><th>学号</th><th>姓名</th><th>结果文件</th>
+                <th>代码文件</th><th>{{ metric.name }}</th><th>时间</th></tr>
+        </thead>
+        <tbody>
+        {% for r in latest %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.student_no }}</td>
+                <td>{{ r.name }}</td>
+                <td>
+                    {% if r.result_path %}
+                        <a href="{{ url_for('admin_download', sid=r.id, ftype='result') }}">{{ r.result_filename }}</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td>
+                    {% if r.code_path %}
+                        <a href="{{ url_for('admin_download', sid=r.id, ftype='code') }}">{{ r.code_filename }}</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td class="mono">{{ r.score | fmt_score }}</td>
+                <td>{{ r.created_at }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="more-link"><a href="{{ url_for('admin_submissions') }}">查看全部提交 →</a></p>
+    {% else %}
+    <p class="empty-text">暂无学生提交。</p>
+    {% endif %}
+</div>
+{% endblock %}

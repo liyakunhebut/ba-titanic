@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}大数据竞赛 · 在线评分系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if session.get('user_id') %}
+<header class="navbar">
+    <div class="nav-inner">
+        <a class="brand" href="{{ url_for('upload_page') }}">
+            <span class="brand-mark">赛</span>
+            大数据竞赛 · 在线评分系统
+        </a>
+        <nav class="nav-links">
+            <a href="{{ url_for('upload_page') }}"
+               class="{{ 'active' if request.endpoint == 'upload_page' else '' }}">提交评分</a>
+            <a href="{{ url_for('topic_page') }}"
+               class="{{ 'active' if request.endpoint == 'topic_page' else '' }}">赛题与数据</a>
+            <a href="{{ url_for('leaderboard') }}"
+               class="{{ 'active' if request.endpoint == 'leaderboard' else '' }}">排行榜</a>
+            <a href="{{ url_for('my_submissions') }}"
+               class="{{ 'active' if request.endpoint == 'my_submissions' else '' }}">我的提交</a>
+            <a href="{{ url_for('change_password') }}"
+               class="{{ 'active' if request.endpoint == 'change_password' else '' }}">修改密码</a>
+            <a href="{{ url_for('logout') }}" class="logout-link">退出登录</a>
+        </nav>
+    </div>
+</header>
+{% endif %}
+
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-area">
+                {% for category, msg in messages %}
+                    <div class="flash flash-{{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    商务大数据分析课程竞赛 ｜ 评价指标 {{ metric.name }}（{{ metric.task_type_label }}），{{ metric.better_text }}
+</footer>
+</body>
+</html>

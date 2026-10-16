@@ -1,0 +1,37 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}系统设置 · 管理后台{% endblock %}
+{% block content %}
+<h2 class="admin-page-title">系统设置</h2>
+
+<div class="card narrow-card">
+    <h2 class="card-title">⏰ 提交截止时间</h2>
+
+    <div class="deadline-current">
+        {% if dstat.set %}
+            <p>当前截止时间：<b>{{ dstat.deadline.strftime('%Y-%m-%d %H:%M:%S') }}</b></p>
+            {% if dstat.expired %}
+                <p class="deadline-msg deadline-stopped">⛔ 已截止，学生无法再提交</p>
+            {% else %}
+                <p class="deadline-msg deadline-running">
+                    ⏳ 距截止还有 <b>{{ dstat.remain | fmt_td }}</b>
+                </p>
+            {% endif %}
+        {% else %}
+            <p class="deadline-msg deadline-none">ℹ️ 当前<b>未设置</b>截止时间，学生可随时提交</p>
+        {% endif %}
+    </div>
+
+    <form method="post" class="form">
+        <label class="field">
+            <span class="field-label">设置新的截止时间</span>
+            <input type="datetime-local" name="deadline" required class="datetime-input"
+                   step="60">
+        </label>
+        <div class="form-actions">
+            <button type="submit" name="action" value="set" class="btn btn-primary">保存截止时间</button>
+            <button type="submit" name="action" value="clear" class="btn btn-ghost"
+                    onclick="return confirm('确定取消截止时间吗？');">取消截止时间</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

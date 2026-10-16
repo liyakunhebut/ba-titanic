@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}赛题与数据 · 大数据竞赛在线评分系统{% endblock %}
+{% block content %}
+<div class="card topic-card">
+    <div class="topic-hero">
+        <div class="topic-logo">赛</div>
+        <div>
+            <h1 class="topic-title">{{ t.topic_title }}</h1>
+            <p class="topic-hero-sub">商务大数据课程竞赛 · 赛题与数据</p>
+        </div>
+    </div>
+
+    <div class="doc-content">
+        <h2>赛题说明</h2>
+        {{ t.topic_desc | nl2p }}
+
+        <h2>数据下载</h2>
+        <p>点击文件名即可下载对应数据文件：</p>
+        <p class="data-dl-row"><span class="data-dl-label">训练数据：</span>{% if files.train %}<a class="data-link" href="{{ url_for('download_data', key='train') }}">{{ files.train }}</a>{% else %}<span class="muted">暂未提供</span>{% endif %}</p>
+        <p class="data-dl-row"><span class="data-dl-label">测试数据：</span>{% if files.testA %}<a class="data-link" href="{{ url_for('download_data', key='testA') }}">{{ files.testA }}</a>{% else %}<span class="muted">暂未提供</span>{% endif %}</p>
+        <p class="data-dl-row"><span class="data-dl-label">提交样例：</span>{% if files.sample %}<a class="data-link" href="{{ url_for('download_data', key='sample') }}">{{ files.sample }}</a>{% else %}<span class="muted">暂未提供</span>{% endif %}</p>
+
+        <h2>竞赛数据</h2>
+        {{ t.topic_data | nl2p }}
+
+        <h2>提交说明</h2>
+        {{ t.topic_submit | nl2p }}
+
+        <h2>评价指标</h2>
+        <div class="metric-current">
+            本赛题由管理员设定的评价指标：<b>{{ metric.name }}</b>
+            （学习类型：{{ metric.task_type_label }} ｜ {{ metric.better_text }}）<br>
+            计算口径：{{ metric.description }}
+        </div>
+        {{ t.topic_metric | nl2p }}
+    </div>
+</div>
+{% endblock %}

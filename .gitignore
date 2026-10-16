@@ -1,0 +1,32 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+env/
+
+# ---- 运行时数据（不入库）----
+# 数据库含学生账号密码哈希与成绩，属于运行数据，不提交
+scoring.db
+scoring.db-journal
+*.sqlite3
+
+# 学生上传的结果文件与代码压缩包（含个人信息，不提交）
+uploads/results/*
+uploads/code/*
+!uploads/results/.gitkeep
+!uploads/code/.gitkeep
+
+# ---- 敏感数据（公开仓库不提交）----
+# 学生名单：含姓名 + 学号（登录账号），属个人信息
+工业24级名单.xlsx
+# 评分标准答案：公开会让学生直接拿到答案
+data/test_真实标签.csv
+data/ansA.csv
+
+# ---- 本地环境 ----
+.env
+*.log
+.DS_Store
+Thumbs.db

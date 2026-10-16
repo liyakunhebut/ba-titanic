@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}提交评分 · 在线评分系统{% endblock %}
+{% block content %}
+<div class="welcome">
+    <div>
+        <h2>你好，{{ user.name }} 👋</h2>
+        <p>{{ user.class_name }} ｜ 学号 {{ user.student_no }}</p>
+    </div>
+    <a href="{{ url_for('leaderboard') }}" class="btn btn-outline">查看排行榜 →</a>
+</div>
+
+{% if dstat.set %}
+<div class="deadline-bar {{ 'deadline-bar-stopped' if dstat.expired else '' }}">
+    {% if dstat.expired %}
+        ⛔ <b>提交已截止</b>（{{ dstat.deadline.strftime('%Y-%m-%d %H:%M') }}），无法再提交
+    {% else %}
+        ⏰ <b>提交截止时间：{{ dstat.deadline.strftime('%Y-%m-%d %H:%M') }}</b>
+        ｜ 剩余 {{ dstat.remain | fmt_td }}，请在此之前完成提交
+    {% endif %}
+</div>
+{% endif %}
+
+{% if result %}
+<div class="score-banner">
+    <div class="score-main">
+        <span class="score-label">本次成绩（{{ metric.name }}）</span>
+        <span class="score-value">{{ result.score | fmt_score }}</span>
+        <span class="score-rule">{{ metric.better_text }}</span>
+    </div>
+    <div class="score-meta">
+        <p>结果文件：{{ result.result_name }}</p>
+        <p>代码文件：{{ result.code_name or '未上传' }}</p>
+        <p>时间：{{ result.time }}</p>
+        {% if result.score == best_score %}
+            <p class="new-record">🎉 当前为个人最佳成绩！</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="stat-row">
+    <div class="stat-box">
+        <span class="stat-label">历史最佳 {{ metric.name }}</span>
+        <span class="stat-num">{{ best_score | fmt_score }}</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">当前总排名</span>
+        <span class="stat-num">{% if my_rank %}第 {{ my_rank }} 名{% else %}暂无{% endif %}</span>
+    </div>
+    <div class="stat-box">
+        <span class="stat-label">累计提交次数</span>
+        <span class="stat-num">{{ n_submit }}</span>
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="card-title">上传预测结果与代码</h2>
+    {% if dstat.expired %}
+    <div class="submit-closed-box">
+        <p class="big-icon">⛔</p>
+        <p>提交已于 <b>{{ dstat.deadline.strftime('%Y-%m-%d %H:%M:%S') }}</b> 截止。</p>
+        <p>如确有补交需要，请联系任课老师处理。</p>
+    </div>
+    {% else %}
+    <div class="format-help">
+        <p>🎯 当前评价指标：<b>{{ metric.name }}</b>（{{ metric.task_type_label }} · {{ metric.better_text }}）</p>
+        <p>📄 <b>预测结果文件（必选，CSV）</b>：列格式以管理员配置的提交样例为准 ——
+            共 <b>{{ layout.ncols }}</b> 列{% if layout.header %}（{{ layout.header | join('、') }}）{% endif %}，
+            第 1 列为样本id，参与计分的列设定为「{{ metric.pred_column }}」（列序号或列名）；
+            {% if metric.needs_numeric %}该列须为数字预测值。{% else %}该列为类别标签（文字或数字均可）。{% endif %}
+            {% if layout.note %}<span class="muted">{{ layout.note }}</span>{% endif %}
+        </p>
+        <p>💻 <b>代码文件（可选）</b>：支持 <code>.py / .ipynb / .zip / .rar / .7z / .txt / .pdf / .doc / .docx</code> 等，单个文件不超过 32MB。</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="upload-form">
+        <div class="file-group">
+            <span class="file-group-label">① 预测结果（CSV，必选）</span>
+            <input type="file" name="file" accept=".csv" required class="file-input">
+        </div>
+        <div class="file-group">
+            <span class="file-group-label">② 代码文件（可选）</span>
+            <input type="file" name="code_file"
+                   accept=".py,.ipynb,.r,.m,.zip,.rar,.7z,.tar,.gz,.txt,.pdf,.doc,.docx"
+                   class="file-input">
+        </div>
+        <button type="submit" class="btn btn-primary">提交并评分</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2 class="card-title">最近提交记录</h2>
+    {% if recent %}
+    <table class="table">
+        <thead>
+            <tr><th>#</th><th>结果文件</th><th>代码文件</th><th>{{ metric.name }}</th><th>提交时间</th></tr>
+        </thead>
+        <tbody>
+        {% for r in recent %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if r.result_path %}
+                        <a href="{{ url_for('download_file', sid=r.id, ftype='result') }}">{{ r.result_filename }}</a>
+                    {% else %}{{ r.result_filename or '-' }}{% endif %}
+                </td>
+                <td>
+                    {% if r.code_path %}
+                        <a href="{{ url_for('download_file', sid=r.id, ftype='code') }}">{{ r.code_filename }}</a>
+                    {% else %}-{% endif %}
+                </td>
+                <td class="mono">{{ r.score | fmt_score }}</td>
+                <td>{{ r.created_at }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="more-link"><a href="{{ url_for('my_submissions') }}">查看全部提交记录 →</a></p>
+    {% else %}
+    <p class="empty-text">还没有提交记录，快上传你的第一个预测结果吧！</p>
+    {% endif %}
+</div>
+{% endblock %}

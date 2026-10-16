@@ -1,0 +1,90 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}用户管理 · 管理后台{% endblock %}
+{% block content %}
+<h2 class="admin-page-title">用户管理</h2>
+
+<div class="card">
+    <h2 class="card-title">➕ 新增用户</h2>
+    <form method="post" action="{{ url_for('admin_add_user') }}" class="add-user-form">
+        <label class="mini-field">
+            <span>学号 <em>*</em></span>
+            <input type="text" name="student_no" required placeholder="登录账号">
+        </label>
+        <label class="mini-field">
+            <span>姓名 <em>*</em></span>
+            <input type="text" name="name" required>
+        </label>
+        <label class="mini-field">
+            <span>性别</span>
+            <select name="gender" class="mini-select">
+                <option value="">—</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+            </select>
+        </label>
+        <label class="mini-field">
+            <span>班级</span>
+            <input type="text" name="class_name" placeholder="如 工业241">
+        </label>
+        <label class="mini-field">
+            <span>初始密码</span>
+            <input type="text" name="init_password" placeholder="留空则=学号">
+        </label>
+        <button type="submit" class="btn btn-primary add-btn">新增用户</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2 class="card-title">📥 批量导入用户</h2>
+    <p class="card-desc">上传 CSV 或 Excel 文件（.csv / .xlsx / .xls），表头须包含「学号、姓名」，可选「性别、班级」。新用户初始密码自动设为学号；学号已存在的行自动跳过。</p>
+    <form method="post" action="{{ url_for('admin_import_users') }}"
+          enctype="multipart/form-data" class="add-user-form">
+        <input type="file" name="file" accept=".csv,.xlsx,.xls" required class="file-input">
+        <button type="submit" class="btn btn-primary add-btn">导入用户</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2 class="card-title">学生列表</h2>
+    <form method="get" class="search-bar">
+        <input type="text" name="q" value="{{ q }}" placeholder="按学号 / 姓名 / 班级搜索"
+               class="search-input">
+        <button type="submit" class="btn btn-primary">搜索</button>
+        {% if q %}<a href="{{ url_for('admin_users') }}" class="btn btn-ghost">清除</a>{% endif %}
+    </form>
+
+    <p class="card-desc">共 {{ rows|length }} 名学生
+        {% if q %}（搜索关键词：{{ q }}）{% endif %}</p>
+
+    <table class="table">
+        <thead>
+            <tr><th>学号</th><th>姓名</th><th>性别</th><th>班级</th>
+                <th>提交次数</th><th>最佳 {{ metric.name }}</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {% for u in rows %}
+            <tr>
+                <td>{{ u.student_no }}</td>
+                <td>{{ u.name }}</td>
+                <td>{{ u.gender }}</td>
+                <td>{{ u.class_name }}</td>
+                <td>{{ u.n_submit }}</td>
+                <td class="mono">{{ u.best_score | fmt_score }}</td>
+                <td class="action-cell">
+                    <form method="post" action="{{ url_for('admin_reset_password', uid=u.id) }}"
+                          class="inline-form"
+                          onsubmit="return confirm('确定将 {{ u.name }} 的密码重置为学号 {{ u.student_no }} 吗？');">
+                        <button type="submit" class="btn btn-small btn-warn">重置密码</button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin_delete_user', uid=u.id) }}"
+                          class="inline-form"
+                          onsubmit="return confirm('确定删除用户 {{ u.name }}？其全部提交记录与文件将一并删除且不可恢复！');">
+                        <button type="submit" class="btn btn-small btn-danger">删除</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

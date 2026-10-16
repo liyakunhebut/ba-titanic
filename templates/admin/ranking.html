@@ -1,0 +1,51 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}成绩排名 · 管理后台{% endblock %}
+{% block content %}
+<h2 class="admin-page-title">学生成绩排名 🏆</h2>
+
+<div class="card">
+    <div class="toolbar">
+        <p class="toolbar-info">
+            共 {{ total_students }} 名学生，{{ rows|length }} 人已提交 ｜
+            按历史最佳 {{ metric.name }} <b>{{ '降序' if metric.direction == 'max' else '升序' }}</b>排名（{{ metric.better_text }}）
+        </p>
+        <div class="toolbar-btns">
+            <a href="{{ url_for('admin_export_excel') }}" class="btn btn-success">
+                📊 一键导出 Excel</a>
+            <a href="{{ url_for('admin_download_all', mode='best') }}" class="btn btn-primary">
+                📦 下载每人最佳结果</a>
+            <a href="{{ url_for('admin_download_all', mode='all') }}" class="btn btn-ghost">
+                🗂 下载全部历史结果</a>
+        </div>
+    </div>
+
+    {% if rows %}
+    <table class="table table-rank">
+        <thead>
+            <tr><th>排名</th><th>学号</th><th>姓名</th><th>班级</th>
+                <th>最佳 {{ metric.name }}</th><th>提交次数</th><th>最近提交</th></tr>
+        </thead>
+        <tbody>
+        {% for r in rows %}
+            <tr>
+                <td>
+                    {% if loop.index == 1 %}<span class="medal">🥇</span>
+                    {% elif loop.index == 2 %}<span class="medal">🥈</span>
+                    {% elif loop.index == 3 %}<span class="medal">🥉</span>
+                    {% else %}{{ loop.index }}{% endif %}
+                </td>
+                <td>{{ r.student_no }}</td>
+                <td>{{ r.name }}</td>
+                <td>{{ r.class_name }}</td>
+                <td class="mono strong">{{ r.best_score | fmt_score }}</td>
+                <td>{{ r.n_submit }}</td>
+                <td>{{ r.last_time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-text">还没有学生提交成绩。</p>
+    {% endif %}
+</div>
+{% endblock %}

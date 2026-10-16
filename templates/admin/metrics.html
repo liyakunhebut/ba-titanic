@@ -1,0 +1,184 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}评价指标 · 管理后台{% endblock %}
+{% block content %}
+<h2 class="admin-page-title">🎯 评价指标管理</h2>
+
+<div class="card">
+    <h3 class="card-title">当前评分口径</h3>
+    <p class="card-desc">
+        学生上传结果后，系统读取<b>启用中</b>的这条指标设定完成计算：
+        <b>{{ metric.name }}</b>
+        ｜ 学习类型：{{ metric.task_type_label }}
+        ｜ 计分算法：{{ metric.method_label }}
+        ｜ {{ metric.better_text }}
+    </p>
+    <p class="metric-desc">{{ metric.description }}</p>
+    <p class="muted">
+        结果文件列格式以提交样例为准：{{ layout.source or '未配置（按两列校验）' }}，
+        共 {{ layout.ncols }} 列{% if layout.header %}（{{ layout.header | join('、') }}）{% endif %}
+        ｜ 计分列设定：「{{ metric.pred_column }}」
+        ｜ 标准答案 {{ ans_info.source }}，共 {{ ans_info.ncols }} 列（{{ ans_info.columns | join('、') }}）
+        ｜ 真实值计分列设定：「{{ metric.true_column }}」
+    </p>
+</div>
+
+<div class="card">
+    <h3 class="card-title">指标设定列表</h3>
+    <p class="card-desc">可预先设定多个指标，但同一时刻只有一条<b>启用中</b>的指标作为评分与排名口径。</p>
+
+    {% if items %}
+    <table class="table">
+        <thead>
+            <tr><th>指标名称</th><th>学习类型</th><th>计分算法</th><th>优劣方向</th>
+                <th>计分列（结果 / 答案）</th><th>说明</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {% for it in items %}
+            <tr>
+                <td class="strong">{{ it.name }}</td>
+                <td>{{ it.task_type_label }}</td>
+                <td>{{ it.method_label }}</td>
+                <td>{{ it.better_text }}</td>
+                <td class="mono">「{{ it.pred_column }}」/「{{ it.true_column }}」</td>
+                <td class="muted metric-desc-cell">{{ it.description }}</td>
+                <td>
+                    {% if it.enabled %}<span class="badge badge-on">启用中</span>
+                    {% else %}<span class="badge badge-off">未启用</span>{% endif %}
+                </td>
+                <td class="action-cell">
+                    {% if not it.enabled %}
+                    <form method="post" class="inline-form">
+                        <input type="hidden" name="action" value="enable">
+                        <input type="hidden" name="id" value="{{ it.id }}">
+                        <button type="submit" class="btn btn-small btn-primary">启用</button>
+                    </form>
+                    {% endif %}
+                    <a class="btn btn-small btn-ghost" href="{{ url_for('admin_metrics', edit=it.id) }}">编辑</a>
+                    {% if not it.enabled %}
+                    <form method="post" class="inline-form"
+                          onsubmit="return confirm('确定删除指标「{{ it.name }}」？');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="{{ it.id }}">
+                        <button type="submit" class="btn btn-small btn-danger">删除</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-text">暂无指标设定，请在下方新增。</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 class="card-title">{% if editing %}编辑指标 #{{ editing.id }}{% else %}新增评价指标{% endif %}</h3>
+    <p class="card-desc">
+        计分算法从系统内置指标库中选择，优劣方向与计算精度随算法自动确定（可在此覆盖方向）。
+        计分列填<b>列序号</b>（从 1 开始）或<b>列名</b>，保存时会立即对照当前提交样例与标准答案校验。
+    </p>
+
+    <form method="post" class="form">
+        <input type="hidden" name="action" value="{{ 'update' if editing else 'create' }}">
+        {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+
+        <label class="field">
+            <span class="field-label">指标名称 <em>*</em></span>
+            <input type="text" name="name" value="{{ form.name }}" required
+                   placeholder="如：均方误差 MSE、宏平均 F1">
+        </label>
+
+        <div class="field-row">
+            <label class="field">
+                <span class="field-label">学习类型 <em>*</em></span>
+                <select name="task_type">
+                    {% for key, label in task_types.items() %}
+                    <option value="{{ key }}" {{ 'selected' if form.task_type == key }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="field">
+                <span class="field-label">计分算法（内置指标库） <em>*</em></span>
+                <select name="method">
+                    {% for tt, tl in task_types.items() %}
+                    <optgroup label="{{ tl }}">
+                        {% for m in methods if tt in m.tasks %}
+                        <option value="{{ m.key }}"
+                                data-direction="{{ m.direction }}"
+                                {{ 'selected' if form.method == m.key }}>{{ m.label }}（{{ m.direction_text }}）</option>
+                        {% endfor %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="field">
+                <span class="field-label">优劣方向</span>
+                <select name="direction">
+                    <option value="min" {{ 'selected' if form.direction == 'min' }}>越小越好</option>
+                    <option value="max" {{ 'selected' if form.direction == 'max' }}>越大越好</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="field-row">
+            <label class="field">
+                <span class="field-label">结果文件计分列</span>
+                <input type="text" name="pred_column" value="{{ form.pred_column }}"
+                       placeholder="2">
+                <span class="field-tip">提交样例 {{ layout.source or '（未配置）' }} 共 {{ layout.ncols }} 列{% if layout.header %}：{{ layout.header | join('、') }}{% endif %}</span>
+            </label>
+            <label class="field">
+                <span class="field-label">标准答案计分列</span>
+                <input type="text" name="true_column" value="{{ form.true_column }}"
+                       placeholder="2">
+                <span class="field-tip">{{ ans_info.source }} 共 {{ ans_info.ncols }} 列：{{ ans_info.columns | join('、') }}</span>
+            </label>
+        </div>
+
+        <label class="field">
+            <span class="field-label">指标说明</span>
+            <textarea name="description" rows="3"
+                      placeholder="留空则使用内置算法的默认说明">{{ form.description }}</textarea>
+        </label>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {{ '保存指标修改' if editing else '新增指标' }}</button>
+            {% if editing %}
+            <a class="btn btn-ghost" href="{{ url_for('admin_metrics') }}">返回列表</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <details class="method-help">
+        <summary>内置指标库清单（{{ methods | length }} 个算法）</summary>
+        <table class="table">
+            <thead><tr><th>算法</th><th>适用学习类型</th><th>默认方向</th><th>计算口径</th></tr></thead>
+            <tbody>
+            {% for m in methods %}
+                <tr>
+                    <td class="strong">{{ m.label }}</td>
+                    <td>{{ m.task_labels }}</td>
+                    <td>{{ m.direction_text }}</td>
+                    <td class="muted">{{ m.desc }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </details>
+</div>
+
+<div class="card">
+    <h3 class="card-title">按当前指标重算历史成绩</h3>
+    <p class="card-desc">
+        更换启用指标后，历史提交记录中保存的仍是<b>评分当时</b>的指标值。
+        此操作会读取每位学生已落盘的结果文件，按「{{ metric.name }}」重新计算并覆盖成绩（排名与导出随之更新）。
+    </p>
+    <form method="post" class="inline-form"
+          onsubmit="return confirm('确定按「{{ metric.name }}」重算全部历史提交成绩？');">
+        <input type="hidden" name="action" value="rescore">
+        <button type="submit" class="btn btn-warn">开始重算</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}排行榜 · 在线评分系统{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 class="card-title">成绩排行榜 🏆</h2>
+    <p class="card-desc">
+        共 {{ total_users }} 名同学，{{ rows|length }} 人已提交 ｜ 按每人历史最佳 {{ metric.name }} <b>{{ '降序' if metric.direction == 'max' else '升序' }}</b>排名（{{ metric.better_text }}）
+    </p>
+
+    {% if rows %}
+    <table class="table table-rank">
+        <thead>
+            <tr><th>排名</th><th>学号</th><th>姓名</th><th>班级</th>
+                <th>最佳 {{ metric.name }}</th><th>提交次数</th><th>最近提交</th></tr>
+        </thead>
+        <tbody>
+        {% for r in rows %}
+            <tr class="{{ 'row-me' if r.best_score == my_best else '' }}">
+                <td>
+                    {% if loop.index == 1 %}<span class="medal">🥇</span>
+                    {% elif loop.index == 2 %}<span class="medal">🥈</span>
+                    {% elif loop.index == 3 %}<span class="medal">🥉</span>
+                    {% else %}{{ loop.index }}{% endif %}
+                </td>
+                <td>{{ r.student_no }}</td>
+                <td>{{ r.name }}</td>
+                <td>{{ r.class_name }}</td>
+                <td class="mono strong">{{ r.best_score | fmt_score }}</td>
+                <td>{{ r.n_submit }}</td>
+                <td>{{ r.last_time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-text">还没有人提交成绩，成为第一名吧！</p>
+    {% endif %}
+</div>
+{% endblock %}

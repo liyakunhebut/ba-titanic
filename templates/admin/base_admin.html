@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}管理后台 · 大数据竞赛{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="admin-body">
+<header class="navbar admin-navbar">
+    <div class="nav-inner">
+        <a class="brand" href="{{ url_for('admin_index') }}">
+            <span class="brand-mark">赛</span>
+            大数据竞赛 · 管理后台
+        </a>
+        <nav class="nav-links">
+            <span class="admin-badge">管理员</span>
+            <a href="{{ url_for('logout') }}" class="logout-link">退出登录</a>
+        </nav>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('admin_index') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_index' else '' }}">
+            <span class="side-icon">📊</span> 后台首页
+        </a>
+        <a href="{{ url_for('admin_users') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_users' else '' }}">
+            <span class="side-icon">👥</span> 用户管理
+        </a>
+        <a href="{{ url_for('admin_ranking') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_ranking' else '' }}">
+            <span class="side-icon">🏆</span> 成绩排名
+        </a>
+        <a href="{{ url_for('admin_submissions') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_submissions' else '' }}">
+            <span class="side-icon">📁</span> 提交查询
+        </a>
+        <a href="{{ url_for('admin_topic') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_topic' else '' }}">
+            <span class="side-icon">📝</span> 赛题管理
+        </a>
+        <a href="{{ url_for('admin_metrics') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_metrics' else '' }}">
+            <span class="side-icon">🎯</span> 评价指标
+        </a>
+        <a href="{{ url_for('admin_settings') }}"
+           class="side-item {{ 'active' if request.endpoint == 'admin_settings' else '' }}">
+            <span class="side-icon">⚙️</span> 系统设置
+        </a>
+    </aside>
+
+    <main class="admin-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-area">
+                    {% for category, msg in messages %}
+                        <div class="flash flash-{{ category }}">{{ msg }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+</body>
+</html>
